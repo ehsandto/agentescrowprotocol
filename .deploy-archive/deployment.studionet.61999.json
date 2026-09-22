@@ -1,0 +1,9 @@
+{
+  "network": "studionet",
+  "chainId": 61999,
+  "contract": "AgentEscrowContract",
+  "address": "0xae4e3AaA8E96bB5e147FfC51E81D955D60D5f312",
+  "deployTx": "0x757c55f72a77ab8c77d2ad8daf75699c1e2771714b4b975cea6a92714ae1be2d",
+  "deployer": "0x7a413BB4AB62E31d62d4cD9efC8C8a8Dae37FB42",
+  "explorer": "https://explorer-studio.genlayer.com"
+}

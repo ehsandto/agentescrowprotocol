@@ -1,0 +1,11 @@
+{
+  "network": "studio-next",
+  "chainId": 61997,
+  "rpc": "https://studio-dev.genlayer.com/api",
+  "explorer": "https://explorer-studio-dev.genlayer.com",
+  "contract": "AgentEscrowContract",
+  "deployer": "0x0c1aef97b4ab9cC28517fC6601b7094c011f330c",
+  "deployTx": "0xd70cb4d7a83261ba04e6de32e133ccc912955e364a3fb0618ecc9776b4a5f1cf",
+  "address": "0xdc1dC2a80eebc03f4040646d20FD6e854458149D",
+  "deployedAt": "2026-09-17T11:24:29.485Z"
+}
