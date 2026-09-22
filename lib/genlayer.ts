@@ -22,9 +22,11 @@ export const studioNext = {
 export const STUDIONET_CHAIN_ID = STUDIO_NEXT_CHAIN_ID;
 export const STUDIONET_RPC = STUDIO_NEXT_RPC;
 
+const DEPLOYED_CONTRACT = "0x99f8Ccf4f9b2d84E8C966d266459332351774f90";
+
 export function contractAddress() {
-  const value = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "";
-  return value && value.startsWith("0x") ? (value as `0x${string}`) : null;
+  const value = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || DEPLOYED_CONTRACT;
+  return value.startsWith("0x") ? (value as `0x${string}`) : null;
 }
 
 export function createReadClient() {

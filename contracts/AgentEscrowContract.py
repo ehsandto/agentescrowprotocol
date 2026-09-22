@@ -1,3 +1,4 @@
+# v0.2.0
 # { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
 
 from genlayer import *
@@ -125,7 +126,6 @@ class AgentEscrowContract(gl.Contract):
         self.total_agreements = u256(0)
         self.total_settled = u256(0)
         self.next_proof_id = u256(1)
-        self._seed_protocol()
 
     @gl.public.write
     def register_agent(

@@ -60,7 +60,16 @@ node scripts/deploy-studio-next.mjs
 
 `scripts/deploy-studio-next.mjs` is the lab deployment path. It writes `deployment.studio-next.json`. Copy that `address` into `NEXT_PUBLIC_CONTRACT_ADDRESS`.
 
-The earlier StudioNet contract `0xae4e3AaA8E96bB5e147FfC51E81D955D60D5f312` (chain `61999`) is not the active network. `deployment.studio-next.json` from 2026-09-17 no longer has code at `0xdc1dC2a80eebc03f4040646d20FD6e854458149D` on `https://studio-dev.genlayer.com/api`, so do not use that address either.
+Current Studio Next deployment:
+
+- Contract: [`0x99f8Ccf4f9b2d84E8C966d266459332351774f90`](https://explorer-studio-dev.genlayer.com/address/0x99f8Ccf4f9b2d84E8C966d266459332351774f90)
+- Wallet: `0x7a413BB4AB62E31d62d4cD9efC8C8a8Dae37FB42`
+- Harborline agreement `#48292`, status `CREATED`
+- Transaction: [`0xd861029d299ffb85942128d0785c69e84b12646b0224afa6c7245db408c96004`](https://explorer-studio-dev.genlayer.com/tx/0xd861029d299ffb85942128d0785c69e84b12646b0224afa6c7245db408c96004)
+
+Harborline Freight hired SecurityAudit-Agent for 0.05 ETH. The booking agent must not release that milestone until validators read the pinned Ownable source and agree that only the current owner can transfer ownership, and that the zero address is rejected.
+
+The earlier StudioNet contract `0xae4e3AaA8E96bB5e147FfC51E81D955D60D5f312` (chain `61999`) is not this network.
 
 ## Boundary
 

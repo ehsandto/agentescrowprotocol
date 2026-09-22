@@ -1,0 +1,21 @@
+{
+  "network": "studio-dev",
+  "chainId": 61997,
+  "rpc": "https://studio-dev.genlayer.com/api",
+  "explorer": "https://explorer-studio-dev.genlayer.com",
+  "contract": "0x99f8Ccf4f9b2d84E8C966d266459332351774f90",
+  "wallet": "0x7a413BB4AB62E31d62d4cD9efC8C8a8Dae37FB42",
+  "deployTx": "0x6ca1e7fb17c9f43d35e583395b18d456530fdc6b6e12ca94a3b2fcdb6e3ff8f2",
+  "example": {
+    "id": "48292",
+    "title": "Harborline payout-vault review",
+    "client": "Harborline Freight",
+    "provider": "SecurityAudit-Agent",
+    "providerWallet": "0x2222222222222222222222222222222222222222",
+    "problem": "Harborline's booking agent is ready to pay 0.05 ETH for an ownership-control review of a payout vault. The payment stays recorded until GenLayer validators read the pinned source themselves.",
+    "evidenceUrl": "https://raw.githubusercontent.com/OpenZeppelin/openzeppelin-contracts/c64a1edb67b6e3f4a15cca8909c9482ad33a02b0/contracts/access/Ownable.sol",
+    "createTx": "0xd861029d299ffb85942128d0785c69e84b12646b0224afa6c7245db408c96004",
+    "status": "CREATED",
+    "payment": "0.05 ETH"
+  }
+}

@@ -42,8 +42,8 @@ export default function LandingPage() {
             <Button href="/marketplace" variant="secondary">
               Explore Agents
             </Button>
-            <Button href="/agreements/48291" variant="ghost">
-              Open demo #48291
+            <Button href="/agreements/48292" variant="ghost">
+              Open Harborline #48292
             </Button>
           </div>
         </div>
@@ -83,13 +83,23 @@ export default function LandingPage() {
 
       <GlassCard className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-xl font-semibold">Hackathon demo path</h2>
+          <p className="text-xs uppercase tracking-[0.18em] text-accent">Live agreement · Studio Next</p>
+          <h2 className="mt-2 text-xl font-semibold">Harborline will not pay until the vault source checks out</h2>
           <p className="mt-2 max-w-2xl text-sm text-mist-300">
-            StartupAgent hires SecurityAudit-Agent for 0.05 ETH. Evidence is a GitHub repo and audit report. GenLayer validators
-            return SUCCESS. Payment releases and reputation updates.
+            Harborline Freight&apos;s booking agent hired SecurityAudit-Agent for 0.05 ETH to confirm that the pinned OpenZeppelin
+            Ownable source still lets only the current owner transfer ownership, and rejects the zero address. Wallet
+            0x7a413B…FB42 locked agreement #48292 on chain 61997. Status: CREATED.
           </p>
         </div>
-        <Button href="/agreements/48291/verify">Watch consensus</Button>
+        <div className="flex flex-col gap-2">
+          <Button href="/agreements/48292">Open agreement</Button>
+          <Button
+            href="https://explorer-studio-dev.genlayer.com/tx/0xd861029d299ffb85942128d0785c69e84b12646b0224afa6c7245db408c96004"
+            variant="secondary"
+          >
+            View wallet transaction
+          </Button>
+        </div>
       </GlassCard>
     </div>
   );

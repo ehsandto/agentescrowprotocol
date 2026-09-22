@@ -9,22 +9,12 @@ def _deploy(direct_deploy):
     return direct_deploy(CONTRACT)
 
 
-def test_seeds_marketplace_and_demo_agreement(direct_deploy):
+def test_starts_empty(direct_deploy):
     contract = _deploy(direct_deploy)
     stats = contract.get_protocol_stats()
-    assert stats["agent_count"] == 6
-    assert stats["total_agreements"] == 1
-    demo = contract.get_agreement("48291")
-    assert demo["status"] == "COMPLETED"
-    assert demo["result"] == "SUCCESS"
-    assert demo["client_name"] == "StartupAgent"
-    assert demo["provider_name"] == "SecurityAudit-Agent"
-    agent = contract.get_agent_by_name("SecurityAudit-Agent")
-    assert agent["trust_level"] == "A+"
-    assert agent["completed_jobs"] == 243
-    cert = contract.get_certificate("48291")
-    assert cert["result"] == "VERIFIED"
-    assert cert["consensus"] == "12/12"
+    assert stats["agent_count"] == 0
+    assert stats["total_agreements"] == 0
+    assert stats["proof_count"] == 0
 
 
 def test_create_accept_start_and_submit_evidence(direct_vm, direct_deploy, direct_alice, direct_bob):
@@ -41,7 +31,7 @@ def test_create_accept_start_and_submit_evidence(direct_vm, direct_deploy, direc
         "24 hours",
         PAYMENT,
     )
-    aid = contract.get_agreement_id_at(1)
+    aid = contract.get_agreement_id_at(0)
     item = contract.get_agreement(aid)
     assert item["status"] == "CREATED"
     assert int(item["payment"]) == PAYMENT
@@ -113,7 +103,7 @@ def test_submit_evidence_requires_independent_source(direct_vm, direct_deploy, d
         "24 hours",
         PAYMENT,
     )
-    aid = contract.get_agreement_id_at(1)
+    aid = contract.get_agreement_id_at(0)
     direct_vm.sender = direct_bob
     contract.accept_agreement(aid)
     with direct_vm.expect_revert():
@@ -136,7 +126,7 @@ def test_verification_success_settles_and_updates_reputation(
         PAYMENT,
     )
     before = contract.get_agent(direct_bob)
-    aid = contract.get_agreement_id_at(1)
+    aid = contract.get_agreement_id_at(0)
     direct_vm.sender = direct_bob
     contract.accept_agreement(aid)
     contract.submit_evidence(
@@ -200,7 +190,7 @@ def test_hash_mismatch_fails_and_decrements_reputation(
         PAYMENT,
     )
     before = contract.get_agent(direct_bob)
-    aid = contract.get_agreement_id_at(1)
+    aid = contract.get_agreement_id_at(0)
     direct_vm.sender = direct_bob
     contract.accept_agreement(aid)
     contract.submit_evidence(
@@ -252,7 +242,7 @@ def test_missing_evidence_is_inconclusive_and_finalize_refunds(
         "24 hours",
         PAYMENT,
     )
-    aid = contract.get_agreement_id_at(1)
+    aid = contract.get_agreement_id_at(0)
     direct_vm.sender = direct_bob
     contract.accept_agreement(aid)
     contract.submit_evidence(
@@ -291,14 +281,27 @@ def test_register_agent_and_trust_score(direct_vm, direct_deploy, direct_alice):
         contract.register_agent("Other", "Security", "Review", "0.01 ETH")
 
 
-def test_anchor_proof_records_onchain_fingerprint(direct_vm, direct_deploy, direct_alice):
+def test_anchor_proof_records_onchain_fingerprint(direct_vm, direct_deploy, direct_alice, direct_bob):
     contract = _deploy(direct_deploy)
     direct_vm.sender = direct_alice
-    contract.anchor_proof("48291", "Security audit completed successfully")
-    proof = contract.get_latest_proof("48291")
-    assert proof["agreement_id"] == "48291"
+    direct_vm.value = PAYMENT
+    contract.create_agreement(
+        direct_bob,
+        "Harborline Freight",
+        "Keel Audit",
+        "Confirm the pinned ownership control before paying",
+        "Owner-only transfer and zero-address rejection",
+        "Pinned HTTPS source",
+        "2026-10-15",
+        PAYMENT,
+    )
+    aid = contract.get_agreement_id_at(0)
+    direct_vm.value = 0
+    contract.anchor_proof(aid, "Security audit completed successfully")
+    proof = contract.get_latest_proof(aid)
+    assert proof["agreement_id"] == aid
     assert proof["claim"] == "Security audit completed successfully"
-    assert proof["result"] == "SUCCESS"
+    assert proof["result"] == "NONE"
     assert len(proof["fingerprint"]) == 64
     assert int(contract.get_proof_count()) == 1
     stats = contract.get_protocol_stats()
