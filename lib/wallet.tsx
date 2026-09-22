@@ -2,7 +2,12 @@
 
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
-import { createWriteClient, STUDIONET_CHAIN_ID } from "./genlayer";
+import {
+  createWriteClient,
+  STUDIO_NEXT_CHAIN_ID,
+  STUDIO_NEXT_EXPLORER,
+  STUDIO_NEXT_RPC,
+} from "./genlayer";
 import { shortAddress } from "./utils";
 
 type WalletContextValue = {
@@ -64,12 +69,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const getWrite = useCallback(async () => {
     const wallet = walletsRef.current[0];
     if (!wallet) return null;
-    try {
-      await wallet.switchChain(STUDIONET_CHAIN_ID);
-    } catch {
-      // Privy will prompt to add StudioNet if the wallet does not know it yet.
-    }
     const provider = await wallet.getEthereumProvider();
+    await ensureStudioNext(wallet, provider);
     return createWriteClient(wallet.address as `0x${string}`, provider);
   }, []);
 
@@ -90,6 +91,43 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   );
 
   return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>;
+}
+
+type EthereumProvider = {
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+};
+
+function readChainId(value: unknown) {
+  const text = String(value ?? "");
+  return Number.parseInt(text, text.startsWith("0x") ? 16 : 10);
+}
+
+async function ensureStudioNext(
+  wallet: { switchChain: (chainId: number) => Promise<void> },
+  provider: EthereumProvider,
+) {
+  const current = readChainId(await provider.request({ method: "eth_chainId" }));
+  if (current === STUDIO_NEXT_CHAIN_ID) return;
+  try {
+    await wallet.switchChain(STUDIO_NEXT_CHAIN_ID);
+  } catch {
+    await provider.request({
+      method: "wallet_addEthereumChain",
+      params: [
+        {
+          chainId: `0x${STUDIO_NEXT_CHAIN_ID.toString(16)}`,
+          chainName: "GenLayer Studio Next",
+          nativeCurrency: { name: "GEN", symbol: "GEN", decimals: 18 },
+          rpcUrls: [STUDIO_NEXT_RPC],
+          blockExplorerUrls: [STUDIO_NEXT_EXPLORER],
+        },
+      ],
+    });
+  }
+  const after = readChainId(await provider.request({ method: "eth_chainId" }));
+  if (after !== STUDIO_NEXT_CHAIN_ID) {
+    throw new Error(`Switch the wallet to GenLayer Studio Next, chain ${STUDIO_NEXT_CHAIN_ID}, then create the agreement again.`);
+  }
 }
 
 export function useWallet() {

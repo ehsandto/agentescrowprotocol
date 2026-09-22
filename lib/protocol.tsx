@@ -157,11 +157,6 @@ export function ProtocolProvider({ children }: { children: React.ReactNode }) {
       }
       const address = contractAddress();
       if (!address) throw new Error("Contract is not configured.");
-      try {
-        await client.connect("studionet");
-      } catch {
-        // Chain add/switch may already have happened through Privy.
-      }
       const hash = await client.writeContract({
         address,
         functionName,
