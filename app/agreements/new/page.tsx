@@ -1,16 +1,18 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, Suspense, useMemo, useState } from "react";
+import { FormEvent, Suspense, useEffect, useMemo, useState } from "react";
 import { Button, Field, GlassCard, inputClass } from "@/components/ui";
 import { demoFormDefaults, findAgent } from "@/lib/demo-data";
 import { explorerTx } from "@/lib/format";
 import { useProtocol } from "@/lib/protocol";
+import { useWallet } from "@/lib/wallet";
 
 function CreateForm() {
   const router = useRouter();
   const params = useSearchParams();
   const protocol = useProtocol();
+  const wallet = useWallet();
   const prefill = params.get("demo") === "1";
   const providerSlug = params.get("provider");
   const selected = providerSlug ? findAgent(protocol.agents, providerSlug) : undefined;
@@ -31,6 +33,19 @@ function CreateForm() {
   const [showExample, setShowExample] = useState(!prefill && !selected);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    setForm((current) => {
+      const agent = protocol.agents.find((item) => item.wallet === current.provider) ?? protocol.agents[0];
+      if (!agent) return current;
+      if (current.provider === agent.wallet && current.providerName === agent.name) return current;
+      return {
+        ...current,
+        provider: current.provider || agent.wallet,
+        providerName: current.providerName || agent.name,
+      };
+    });
+  }, [protocol.agents]);
+
   function updateField(field: keyof typeof form, value: string) {
     setShowExample(false);
     setForm((current) => ({ ...current, [field]: value }));
@@ -39,8 +54,19 @@ function CreateForm() {
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
+    const providerAgent = protocol.agents.find((item) => item.wallet === form.provider);
+    const providerName = (providerAgent?.name || form.providerName).trim();
+    const clientName = form.clientName.trim();
+    if (clientName.length < 2 || clientName.length > 80 || providerName.length < 2 || providerName.length > 80) {
+      setError("Client and provider names must be 2 to 80 characters. Choose the provider again if that name is blank.");
+      return;
+    }
+    if (wallet.address && form.provider.toLowerCase() === wallet.address.toLowerCase()) {
+      setError("The provider has to be a different wallet from the one you are connected with.");
+      return;
+    }
     try {
-      const id = await protocol.createAgreement(form);
+      const id = await protocol.createAgreement({ ...form, clientName, providerName, provider: form.provider });
       router.push(`/agreements/${id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create agreement");
@@ -83,6 +109,7 @@ function CreateForm() {
                 </option>
               ))}
             </select>
+            <p className="mt-1 text-xs text-mist-400">On-chain name: {form.providerName || "not set yet"}</p>
           </Field>
           <Field label="Task Description">
             <input
