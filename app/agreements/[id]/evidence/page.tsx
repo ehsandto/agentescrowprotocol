@@ -5,12 +5,17 @@ import { FormEvent, useState } from "react";
 import { Button, Field, GlassCard, inputClass } from "@/components/ui";
 import { demoFormDefaults } from "@/lib/demo-data";
 import { useProtocol } from "@/lib/protocol";
+import { useWallet } from "@/lib/wallet";
 
 export default function EvidencePage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const protocol = useProtocol();
+  const wallet = useWallet();
   const item = protocol.getAgreement(params.id);
+  const isProvider = Boolean(
+    item && wallet.address && item.provider.toLowerCase() === wallet.address.toLowerCase(),
+  );
   const [form, setForm] = useState({
     evidenceUrl: item?.evidenceUrl || demoFormDefaults.evidenceUrl,
     githubRepo: item?.githubRepo || demoFormDefaults.githubRepo,
@@ -75,7 +80,11 @@ export default function EvidencePage() {
               onChange={(e) => setForm({ ...form, claim: e.target.value })}
             />
           </Field>
-          <Button type="submit" disabled={protocol.pending === "evidence"}>
+          {!isProvider && item.source === "chain" && (
+            <p className="text-sm text-mist-300">Only {item.providerName}&apos;s wallet can submit evidence for this agreement.</p>
+          )}
+          {protocol.error && <p className="text-sm text-rose-300">{protocol.error}</p>}
+          <Button type="submit" disabled={protocol.pending === "evidence" || (item.source === "chain" && !isProvider)}>
             {protocol.pending === "evidence" ? "Storing fingerprint…" : "Store evidence fingerprint"}
           </Button>
         </form>

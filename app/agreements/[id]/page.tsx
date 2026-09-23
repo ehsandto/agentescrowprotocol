@@ -5,13 +5,23 @@ import { Button, GlassCard, ResultBadge, StatusBadge } from "@/components/ui";
 import { explorerTx } from "@/lib/format";
 import { AGREEMENT_STATUSES } from "@/lib/types";
 import { useProtocol } from "@/lib/protocol";
+import { useWallet } from "@/lib/wallet";
+import { shortAddress } from "@/lib/utils";
+
+function sameAddress(left?: string | null, right?: string | null) {
+  return Boolean(left && right && left.toLowerCase() === right.toLowerCase());
+}
 
 export default function AgreementDetailPage() {
   const params = useParams<{ id: string }>();
   const protocol = useProtocol();
+  const wallet = useWallet();
   const item = protocol.getAgreement(params.id);
 
   if (!item) return <p className="text-mist-300">Agreement not found.</p>;
+
+  const isProvider = sameAddress(wallet.address, item.provider);
+  const isClient = sameAddress(wallet.address, item.client);
 
   const idx = AGREEMENT_STATUSES.indexOf(item.status);
 
@@ -44,11 +54,17 @@ export default function AgreementDetailPage() {
           <dl className="space-y-3 text-sm">
             <div className="flex justify-between gap-4">
               <dt className="text-mist-400">Client</dt>
-              <dd>{item.clientName}</dd>
+              <dd>
+                {item.clientName}
+                <span className="mt-1 block text-xs text-mist-400">{shortAddress(item.client, 6)}{isClient ? " · your wallet" : ""}</span>
+              </dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-mist-400">Provider</dt>
-              <dd>{item.providerName}</dd>
+              <dd>
+                {item.providerName}
+                <span className="mt-1 block text-xs text-mist-400">{shortAddress(item.provider, 6)}{isProvider ? " · your wallet" : ""}</span>
+              </dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-mist-400">Payment</dt>
@@ -80,16 +96,27 @@ export default function AgreementDetailPage() {
         </GlassCard>
       </div>
 
+      {item.status === "CREATED" && isClient && (
+        <p className="text-sm text-mist-300">
+          Your wallet is the client, so it cannot accept this agreement. Connect {item.providerName}&apos;s wallet ({shortAddress(item.provider, 6)}) and accept from there.
+        </p>
+      )}
+      {item.status === "CREATED" && !isClient && !isProvider && (
+        <p className="text-sm text-mist-300">Connect {item.providerName}&apos;s wallet to accept this agreement.</p>
+      )}
       <div className="flex flex-wrap gap-3">
-        {item.status === "CREATED" && (
+        {item.status === "CREATED" && isProvider && (
           <Button onClick={() => protocol.acceptAgreement(item.id)} disabled={Boolean(protocol.pending)}>
             Accept agreement
           </Button>
         )}
-        {item.status === "ACCEPTED" && (
+        {item.status === "ACCEPTED" && isProvider && (
           <Button onClick={() => protocol.startWork(item.id)} disabled={Boolean(protocol.pending)}>
             Start work
           </Button>
+        )}
+        {item.status === "ACCEPTED" && !isProvider && (
+          <p className="w-full text-sm text-mist-300">Only {item.providerName} can start the work.</p>
         )}
         <Button href={`/agreements/${item.id}/evidence`} variant="secondary">
           Evidence

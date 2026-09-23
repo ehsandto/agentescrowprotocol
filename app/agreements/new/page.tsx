@@ -109,7 +109,9 @@ function CreateForm() {
                 </option>
               ))}
             </select>
-            <p className="mt-1 text-xs text-mist-400">On-chain name: {form.providerName || "not set yet"}</p>
+            <p className="mt-1 text-xs text-mist-400">
+              On-chain name: {form.providerName || "not set yet"}. Your connected wallet becomes the client and cannot accept this agreement. The provider wallet has to accept it.
+            </p>
           </Field>
           <Field label="Task Description">
             <input

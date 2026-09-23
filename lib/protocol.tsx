@@ -265,6 +265,12 @@ export function ProtocolProvider({ children }: { children: React.ReactNode }) {
       try {
         const item = state.agreements.find((row) => row.id === id);
         if (liveConfigured && wallet.address && item?.source === "chain") {
+          const providerOnly = method === CONTRACT_METHODS.acceptAgreement || method === CONTRACT_METHODS.startWork;
+          if (providerOnly && item.provider.toLowerCase() !== wallet.address.toLowerCase()) {
+            throw new Error(
+              `Only ${item.providerName} can do this. Your wallet created the agreement as the client, so it cannot accept or start the work.`,
+            );
+          }
           await writeLive(method, [id]);
           return;
         }
@@ -288,6 +294,9 @@ export function ProtocolProvider({ children }: { children: React.ReactNode }) {
         const hash = await evidenceFingerprint(input);
         const item = state.agreements.find((row) => row.id === id);
         if (liveConfigured && wallet.address && item?.source === "chain") {
+          if (item.provider.toLowerCase() !== wallet.address.toLowerCase()) {
+            throw new Error(`Only ${item.providerName} can submit evidence. Connect that provider wallet.`);
+          }
           await writeLive(CONTRACT_METHODS.submitEvidence, [
             id,
             input.evidenceUrl,
