@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useMemo, useState } from "react";
 import { Button, Field, GlassCard, inputClass } from "@/components/ui";
 import { demoFormDefaults, findAgent } from "@/lib/demo-data";
+import { explorerTx } from "@/lib/format";
 import { useProtocol } from "@/lib/protocol";
 
 function CreateForm() {
@@ -134,6 +135,14 @@ function CreateForm() {
           </div>
           {error && <p className="text-sm text-rose-300">{error}</p>}
           {protocol.error && <p className="text-sm text-rose-300">{protocol.error}</p>}
+          {protocol.lastTxHash && (
+            <p className="break-all text-sm text-mist-300">
+              Transaction{" "}
+              <a className="text-accent" href={explorerTx(protocol.lastTxHash)} target="_blank" rel="noreferrer">
+                {protocol.lastTxHash}
+              </a>
+            </p>
+          )}
           <Button type="submit" disabled={protocol.pending === "create"}>
             {protocol.pending === "create" ? "Creating escrow…" : "Create Escrow Agreement"}
           </Button>

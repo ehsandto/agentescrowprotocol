@@ -12,7 +12,7 @@ import { demoAgents, demoAgreement, demoEdges, demoState } from "./demo-data";
 import { evidenceFingerprint } from "./evidence";
 import { parseEthToWei, paymentLabel } from "./format";
 import { TransactionStatus } from "genlayer-js/types";
-import { CONTRACT_METHODS, contractAddress } from "./genlayer";
+import { CONTRACT_METHODS, contractAddress, studioWriteFees } from "./genlayer";
 import { sleep } from "./utils";
 import { useWallet } from "./wallet";
 import type {
@@ -157,25 +157,33 @@ export function ProtocolProvider({ children }: { children: React.ReactNode }) {
       }
       const address = contractAddress();
       if (!address) throw new Error("Contract is not configured.");
-      const hash = await client.writeContract({
-        address,
-        functionName,
-        args: args as never,
-        value,
+      const fees = await studioWriteFees(client);
+      const hash = String(
+        await client.writeContract({
+          address,
+          functionName,
+          args: args as never,
+          value,
+          fees: fees as never,
+        }),
+      );
+      setLastTxHash(hash);
+      const receipt = await client.waitForTransactionReceipt({
+        hash: hash as never,
+        status: TransactionStatus.ACCEPTED,
+        retries: 36,
+        interval: 4000,
       });
-      setLastTxHash(String(hash));
-      try {
-        await client.waitForTransactionReceipt({
-          hash,
-          status: TransactionStatus.ACCEPTED,
-          retries: 48,
-          interval: 4000,
-        });
-      } catch {
-        // Receipt polling can time out on StudioNet while the tx is still progressing.
+      const leaders = (receipt as { consensus_data?: { leader_receipt?: Array<Record<string, unknown>> } }).consensus_data
+        ?.leader_receipt;
+      const last = leaders?.at(-1);
+      const execution = String(last?.execution_result ?? "");
+      const detail = String((last?.result as { payload?: string } | undefined)?.payload ?? "");
+      if (execution && execution !== "SUCCESS") {
+        throw new Error(`Transaction ${hash} failed (${execution}${detail ? `: ${detail}` : ""}).`);
       }
       await refresh();
-      return String(hash);
+      return hash;
     },
     [refresh, wallet],
   );
@@ -187,7 +195,7 @@ export function ProtocolProvider({ children }: { children: React.ReactNode }) {
       try {
         const paymentWei = parseEthToWei(input.payment).toString();
         if (liveConfigured) {
-          await writeLive(CONTRACT_METHODS.createAgreement, [
+          const hash = await writeLive(CONTRACT_METHODS.createAgreement, [
             input.provider,
             input.clientName,
             input.providerName,
@@ -198,8 +206,17 @@ export function ProtocolProvider({ children }: { children: React.ReactNode }) {
             BigInt(paymentWei),
           ]);
           const latest = await fetch("/api/state", { cache: "no-store" }).then((r) => r.json());
-          const created = (latest.agreements as Agreement[]).sort((a, b) => Number(b.id) - Number(a.id))[0];
-          return created?.id ?? demoAgreement.id;
+          const created = (latest.agreements as Agreement[])
+            .filter(
+              (item) =>
+                item.description === input.description &&
+                item.client.toLowerCase() === (wallet.address || "").toLowerCase(),
+            )
+            .sort((a, b) => Number(b.id) - Number(a.id))[0];
+          if (!created) {
+            throw new Error(`Agreement submitted. Refresh in a moment if it is not listed yet. Transaction ${hash}`);
+          }
+          return created.id;
         }
         const id = String(49000 + readLocal().length + 1);
         const item: Agreement = {

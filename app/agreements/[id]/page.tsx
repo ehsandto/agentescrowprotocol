@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { Button, GlassCard, ResultBadge, StatusBadge } from "@/components/ui";
+import { explorerTx } from "@/lib/format";
 import { AGREEMENT_STATUSES } from "@/lib/types";
 import { useProtocol } from "@/lib/protocol";
 
@@ -61,6 +62,16 @@ export default function AgreementDetailPage() {
               <dt className="text-mist-400">Settled</dt>
               <dd>{item.settled ? "Yes" : "No"}</dd>
             </div>
+            {protocol.lastTxHash && (
+              <div className="flex justify-between gap-4">
+                <dt className="text-mist-400">Transaction</dt>
+                <dd className="break-all text-right">
+                  <a className="text-accent" href={explorerTx(protocol.lastTxHash)} target="_blank" rel="noreferrer">
+                    {protocol.lastTxHash}
+                  </a>
+                </dd>
+              </div>
+            )}
           </dl>
         </GlassCard>
         <GlassCard>

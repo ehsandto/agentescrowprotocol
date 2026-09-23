@@ -1,5 +1,5 @@
 import { createClient } from "genlayer-js";
-import { studionet } from "genlayer-js/chains";
+import { studioDevnet } from "genlayer-js/chains";
 
 // Studio Next (GenLayer Studio Dev preview network) — chain 61997.
 export const STUDIO_NEXT_CHAIN_ID = 61997;
@@ -7,9 +7,8 @@ export const STUDIO_NEXT_RPC =
   process.env.NEXT_PUBLIC_GENLAYER_RPC_URL || "https://studio-dev.genlayer.com/api";
 export const STUDIO_NEXT_EXPLORER = "https://explorer-studio-dev.genlayer.com";
 
-// genlayer-js has no preset for 61997 yet; derive it from the studionet preset.
 export const studioNext = {
-  ...studionet,
+  ...studioDevnet,
   id: STUDIO_NEXT_CHAIN_ID,
   name: "GenLayer Studio Next",
   rpcUrls: { default: { http: [STUDIO_NEXT_RPC] } },
@@ -42,6 +41,30 @@ export function createWriteClient(account: `0x${string}`, provider: unknown) {
     account,
     provider,
   });
+}
+
+type FeeClient = {
+  estimateTransactionFees: (args: {
+    leaderTimeunitsAllocation: bigint;
+    validatorTimeunitsAllocation: bigint;
+    rotations: bigint[];
+    appealRounds: bigint;
+    totalMessageFees: bigint;
+    executionBudgetPerRound: bigint;
+  }) => Promise<{ distribution: unknown; feeValue: bigint | string }>;
+};
+
+/** Studio Next rejects a write whose fee deposit is zero. */
+export async function studioWriteFees(client: FeeClient) {
+  const quote = await client.estimateTransactionFees({
+    leaderTimeunitsAllocation: 80n,
+    validatorTimeunitsAllocation: 120n,
+    rotations: [0n],
+    appealRounds: 0n,
+    totalMessageFees: 0n,
+    executionBudgetPerRound: 20_000_000_000_000_000n,
+  });
+  return { distribution: quote.distribution, feeValue: BigInt(quote.feeValue) };
 }
 
 export const CONTRACT_METHODS = {
